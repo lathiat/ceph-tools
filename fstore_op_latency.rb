@@ -18,7 +18,11 @@ threshold = 0.2
 
 ARGF.each_line do |l|
     a = l.split(" ")
-    cur_t = DateTime.parse(a[0..1].join(" ")).to_time
+    begin
+        cur_t = DateTime.parse(a[0..1].join(" ")).to_time
+    rescue ArgumentError
+        next
+    end
     thread_id = a[2]
     next if cur_t.nil?
     if l =~ / _do_op .* start$/
