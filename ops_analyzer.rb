@@ -1,8 +1,40 @@
 #!/usr/bin/env ruby
+
+# This script is designed to parse the output of dump_historic_ops and then
+# measure the time spent between different phases. Often when analysing this
+# output, firstly it can be difficult to parse visually because there is so
+# much data and secondly the data only consists of absolute times so it is not
+# easy to know the time spent in various phases.
 #
+# It's also designed to help isolate operations that were slow locally (to the
+# op_commit phase) as opposed to operations that were slow remotely (waiting
+# for subops) and the fact that the apply phase causes the entire operation to
+# wait around unti lthe filestore_max_sync_interval (5 seconds by default)
+# which means that the built-in age/duration timers are mostly unhelpful.
+#
+# Anyone using this script will likely want to customise the hash
+# 'measure_between' in order to measure the time between interesting events.
+#
+# Hopefully in future the script will be expanded to parse and report on the
+# data, but for now it just naively outputs the operations and the timing in
+# order of longest to shortest. At the time of writing I mostly would parse
+# a bunch of output, then grep the various timing pairs looking for interesting
+# times.
+#
+# You'll also likely want to increase osd_op_history_size from the default 20
+# to something larger at least 200 or maybe much larger depending on how many
+# operations/second your cluster is processing and how many slow operations you
+# are getting. Mind your memory usage!
+
 # Author: Trent Lloyd
 # https://github.com/lathiat/ceph-tools
 # License: GPL v3
+
+measure_between = {"reached_pg" => ["journaled_completion_queued"],
+                   "initiated" => ["commit_sent", "journaled_completion_queued", "reached_pg", "op_commit"],
+                   "started" => ["commit_queued_for_journal_write"],
+                   "commit_queued_for_journal_write" => ["journaled_completion_queued", "op_commit"],
+}
 
 require 'pp'
 require 'json'
@@ -19,11 +51,6 @@ else
     op_in = j["Ops"]
 end
 
-measure_between = {"reached_pg" => ["journaled_completion_queued"],
-                   "initiated" => ["commit_sent", "journaled_completion_queued", "reached_pg", "op_commit"],
-                   "started" => ["commit_queued_for_journal_write"],
-                   "commit_queued_for_journal_write" => ["journaled_completion_queued", "op_commit"],
-}
 interesting = []
 
 op_in.each do |op|
