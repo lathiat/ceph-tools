@@ -14,8 +14,8 @@ between various stages and output them in time order
 
 # fstore_op_latency.rb
 
-Processes the output of the OSD log with debug_osd=10 to determine the time
-spent by the filestore_op thread processing each operation. Designed to
+Processes the output of the OSD log with debug_filestore=10 to determine the
+time spent by the filestore_op thread processing each operation. Designed to
 highlight when a small number of operations are taking a high amount of time
 (e.g. 0.1 seconds or more) which can hold up the small number of filestore_op
 threads.

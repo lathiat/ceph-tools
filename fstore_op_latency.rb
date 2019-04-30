@@ -1,7 +1,9 @@
 #!/usr/bin/env ruby
 
-# This script is designed to parse OSD logs with debug_filestore = 10 or 15 and
-# calculate the latency of various parts of the process.
+# This script is designed to parse OSD logs with debug_osd=10 and
+# debug_filestore = 10 (or 15 if you want to more precisely measure the time
+# inside of pwritev()) and calculate the latency of various parts of the
+# process.
 #
 # It has two main purposes, the first is to count and calculate the latency of
 # every operation, and secondly is to time specific parts of it with an
